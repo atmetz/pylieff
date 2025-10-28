@@ -1,170 +1,219 @@
 from tkinter import *
 from functools import partial
 
+from config import P1_COLOR, P2_COLOR, B_COLOR, P_WIDTH, INTERVAL, ROOT
+
+last_piece = {
+    "key": '',
+    "color": '',
+    "player": '',
+    "placed": False
+}
+
 def on_enter(event):
     event.widget.config(bg="blue")
 
-def on_leave(event):
-    event.widget.config(bg="gray")
-
-def on_click(event):
-    text = event.widget.cget("bg")
-    print(event.x)
-    if text != "gray":
-        print("I dunno")
+def on_leave(board, event):
+    if board == "Player 1":
+        event.widget.config(bg=P1_COLOR)
+    elif board == "Player 2":
+        event.widget.config(bg=P2_COLOR)
     else:
-        print("Already claimed")
+        event.widget.config(bg=B_COLOR)
+
+def on_click_player(key, player, color, event):
+
+    global last_piece
+
+    win_width = ROOT.winfo_width()
+
+    sp_x = (win_width - P_WIDTH) / 2
+
+    sp_label = Label(ROOT, text = f" {player}'s Selected Piece")
+    #spl_x = (win_width - sp_label.winfo_width()) / 2
+    sp_label.place(x = sp_x, y = 5)
+
+    sp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=color)
+    sp_canvas.place(x = sp_x, y = 25)
+
+    event.widget.place_forget()
+
+    sp_canvas.create_rectangle(1, 1, P_WIDTH, P_WIDTH, width = 1)
+
+    show_piece(key, sp_canvas)
+
+    last_piece["key"] = key
+    last_piece["color"] = color
+    last_piece["player"] = player
+    last_piece["placed"] = False
+
+def on_click_board(event):
+
+    w_x = event.widget.winfo_x()
+    w_y = event.widget.winfo_y()
+
+    if not last_piece["placed"]:
+
+        last_piece["placed"] = True
+
+        pp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=last_piece["color"])
+        pp_canvas.place(x = w_x, y = w_y)
+
+        event.widget.place_forget()
+
+        show_piece(last_piece["key"], pp_canvas)
+
+def show_piece(key, canvas):
+    if "xcross" in key:
+        for shape in draw_shapes("xcross"):
+            canvas.create_polygon(shape)
+    elif "cross" in key:
+        for shape in draw_shapes("cross"):
+            canvas.create_polygon(shape)
+    elif "xcircle" in key:
+        for shape in draw_shapes("xcircle"):
+            if len(shape) == 5:
+                canvas.create_oval(shape[:4], fill = shape[4], width = 3)
+            else:
+                canvas.create_arc(shape[:4], extent = shape[4], start=shape[5], style=ARC, width = 3)
+    elif "circle" in key:
+        for shape in draw_shapes("circle"):
+            if len(shape) == 5:
+                canvas.create_oval(shape[:4], fill = "black", width = 3)
+            else:
+                canvas.create_oval(shape, width = 3)
 
 def draw_shapes(shape):
 
     if shape == "cross":
         points = [
-            [24, 0, 29, 15, 24, 20, 19, 15],
-            [33, 19, 48, 24, 33, 29, 28, 24],
-            [24, 28, 29, 33, 24, 48, 19, 33],
-            [15, 19, 20, 24, 15, 29, 0, 24],
+            [int(P_WIDTH / 2), 1, int(P_WIDTH / 1.66), int(P_WIDTH / 3.125), int(P_WIDTH / 2), int(P_WIDTH / 2.38), int(P_WIDTH / 2.5), int(P_WIDTH / 3.125)],
+            [int(P_WIDTH / 1.47),  int(P_WIDTH / 2.5), int(P_WIDTH / 1.02), int(P_WIDTH / 2), int(P_WIDTH / 1.47), int(P_WIDTH / 1.66), int(P_WIDTH / 1.72), int(P_WIDTH / 2)],
+            [int(P_WIDTH / 2),  int(P_WIDTH / 1.72), int(P_WIDTH / 1.66), int(P_WIDTH / 1.47), int(P_WIDTH / 2), int(P_WIDTH / 1.02), int(P_WIDTH / 2.5), int(P_WIDTH / 1.47)],
+            [int(P_WIDTH / 3.125),  int(P_WIDTH / 2.5), int(P_WIDTH / 2.38), int(P_WIDTH / 2), int(P_WIDTH / 3.125), int(P_WIDTH / 1.66), int(P_WIDTH / P_WIDTH), int(P_WIDTH / 2.0)],
             ]
     elif shape == "xcross":
         points = [
-            [7, 7, 21, 14, 21, 21, 14, 21],
-            [27, 14, 41, 7, 34, 21, 27, 21],
-            [27, 27, 34, 27, 41, 41, 27, 34],
-            [14, 27, 21, 27, 21, 34, 7, 41],
+            [int(P_WIDTH / 6.25),  int(P_WIDTH / 6.25), int(P_WIDTH / 2.27), int(P_WIDTH / 3.33), int(P_WIDTH / 2.27), int(P_WIDTH / 2.27), int(P_WIDTH / 3.33), int(P_WIDTH / 2.27)],
+            [int(P_WIDTH / 1.78),  int(P_WIDTH / 3.33), int(P_WIDTH / 1.19), int(P_WIDTH / 6.25), int(P_WIDTH / 1.42), int(P_WIDTH / 2.27), int(P_WIDTH / 1.78), int(P_WIDTH / 2.27)],
+            [int(P_WIDTH / 1.78),  int(P_WIDTH / 1.78), int(P_WIDTH / 1.42), int(P_WIDTH / 1.78), int(P_WIDTH / 1.19), int(P_WIDTH / 1.19), int(P_WIDTH / 1.78), int(P_WIDTH / 1.43)],
+            [int(P_WIDTH / 3.33),  int(P_WIDTH / 1.78), int(P_WIDTH / 2.27), int(P_WIDTH / 1.78), int(P_WIDTH / 2.27), int(P_WIDTH / 1.42), int(P_WIDTH / 6.25), int(P_WIDTH / 1.19)],
             ]
     elif shape == 'circle':
         points = [
-            [8, 8, 42, 42],
-            [20, 20, 30, 30, "black"]
+            [int(P_WIDTH / 4.16),  int(P_WIDTH / 4.16), int(P_WIDTH / 1.31), int(P_WIDTH / 1.31)],
+            [int(P_WIDTH / 2.38),  int(P_WIDTH / 2.38), int(P_WIDTH / 1.72), int(P_WIDTH / 1.72), "black"]
             ]
     elif shape == 'xcircle':
         points = [
-            [8, 8, 42, 42, 80, 5],
-            [8, 8, 42, 42, 80, 95],
-            [8, 8, 42, 42, 80, 185],
-            [8, 8, 42, 42, 80, 275],
-            [20, 20, 30, 30, "black"]
+            [int(P_WIDTH / 10.0),  int(P_WIDTH / 10.0), int(P_WIDTH / 1.11), int(P_WIDTH / 1.11), 80, 5],
+            [int(P_WIDTH / 10.0),  int(P_WIDTH / 10.0), int(P_WIDTH / 1.11), int(P_WIDTH / 1.11), 80, 95],
+            [int(P_WIDTH / 10.0),  int(P_WIDTH / 10.0), int(P_WIDTH / 1.11), int(P_WIDTH / 1.11), 80, 185],
+            [int(P_WIDTH / 10.0),  int(P_WIDTH / 10.0), int(P_WIDTH / 1.11), int(P_WIDTH / 1.11), 80, 275],
+            [int(P_WIDTH / 2.5),  int(P_WIDTH / 2.5), int(P_WIDTH / 1.66), int(P_WIDTH / 1.66), "black"]
             ]
 
     return points
 
-def player_board(player, x, y, start, interval, b_width, root, color):
+def player_board(player, p_x, p_y, start, color):
     # Player 1 Pieces
 
-    player_name = Label(root, text = f"{player}'s pieces")
-    p_x = x
-    p_y = y
-    p_canvas = Canvas(root, width = 100 + (interval * 2), height  = 100 + (interval * 4), bg="white")
+    player_name = Label(ROOT, text = f"{player}'s pieces")
+    p_canvas = Canvas(ROOT, width = (start * 2) + (INTERVAL * 2), height  = (start * 2) + (INTERVAL * 4), bg="white")
     p_canvas.place(x = p_x, y = p_y)
     player_name.place(x = p_x, y = p_y - 50)
     
-    p_canvas.bind("<Button-1>", on_click)
-    
 
-    p_canvas.create_rectangle(start, start, start + (interval * 2), start + (interval * 4), width = 3)
-    p_canvas.create_line(start + interval, start, start + interval, start + (interval * 4), width = 3)
-    p_canvas.create_line(start, start + interval, start + (interval * 2), start + interval, width = 3)
-    p_canvas.create_line(start, start + (interval * 2), start + (interval * 2), start + (interval * 2), width = 3)
-    p_canvas.create_line(start, start + (interval * 3), start + (interval * 2), start + (interval * 3), width = 3)
+    p_canvas.create_rectangle(start, start, start + (INTERVAL * 2), start + (INTERVAL * 4), width = 3)
+    p_canvas.create_line(start + INTERVAL, start, start + INTERVAL, start + (INTERVAL * 4), width = 3)
+    p_canvas.create_line(start, start + INTERVAL, start + (INTERVAL * 2), start + INTERVAL, width = 3)
+    p_canvas.create_line(start, start + (INTERVAL * 2), start + (INTERVAL * 2), start + (INTERVAL * 2), width = 3)
+    p_canvas.create_line(start, start + (INTERVAL * 3), start + (INTERVAL * 2), start + (INTERVAL * 3), width = 3)
 
     p_pieces = {
-        "cross_1" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "cross_2" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "xcross_1" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "xcross_2" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "circle_1" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "circle_2" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "xcircle_1" : Canvas(root, width = b_width, height = b_width, bg=color),
-        "xcircle_2" : Canvas(root, width = b_width, height = b_width, bg=color),
+        "cross_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "cross_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcross_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcross_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "circle_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "circle_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcircle_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcircle_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
     }
 
-    p_start_x = p_x + 49
-    p_start_y = p_y + 49
+    p_start_x = p_x + start + 2
+    p_start_y = p_y + start + 2
     p_board_x = 0
     p_board_y = 0
 
 
     for key in p_pieces:
         p_pieces[key].place(x = p_start_x, y = p_start_y)
-        p_pieces[key].place(x = p_start_x + p_board_x, y = p_start_y + p_board_y, width = b_width, height = b_width)
+        p_pieces[key].place(x = p_start_x + p_board_x, y = p_start_y + p_board_y, width = P_WIDTH, height = P_WIDTH)
         p_pieces[key].bind("<Enter>", on_enter)
-        p_pieces[key].bind("<Leave>", on_leave)
-        p_pieces[key].bind("<Button-1>", on_click)
+        p_pieces[key].bind("<Leave>", partial(on_leave, player))
+        p_pieces[key].bind("<Button-1>", partial(on_click_player, key, player, color))
 
-        if "xcross" in key:
-            for shape in draw_shapes("xcross"):
-                p_pieces[key].create_polygon(shape)
-        elif "cross" in key:
-            for shape in draw_shapes("cross"):
-                p_pieces[key].create_polygon(shape)
-        elif "xcircle" in key:
-            for shape in draw_shapes("xcircle"):
-                if len(shape) == 5:
-                    p_pieces[key].create_oval(shape[:4], fill = shape[4], width = 3)
-                else:
-                    p_pieces[key].create_arc(shape[:4], extent = shape[4], start=shape[5], style=ARC, width = 3)
-        elif "circle" in key:
-            for shape in draw_shapes("circle"):
-                if len(shape) == 5:
-                    p_pieces[key].create_oval(shape[:4], fill = "black", width = 3)
-                else:
-                    p_pieces[key].create_oval(shape, width = 3)
+        show_piece(key, p_pieces[key])
 
-        p_board_x += interval
-        if p_board_x > 1 * interval:
-            p_board_y += interval
+        p_board_x += INTERVAL
+        if p_board_x > 1 * INTERVAL:
+            p_board_y += INTERVAL
             p_board_x = 0
 
 
 def ui():
-    root = Tk()
 
-    root.title("Pylieff")
-    root.geometry("800x600")
-        
-    b_width = 50
-    interval = b_width + 3
-    start = 47
-    end = start + 2 + (interval * 4)
+    start = 20
+    end = start + 2 + (INTERVAL * 4)
 
-    player_board("Player 1", 20, 100, start, interval, b_width, root, "gray")
-    player_board("Player 2", 582, 100, start, interval, b_width, root, "red")
+    window_x = (start * 4) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)) * 2   
+    window_y = 9 * P_WIDTH
+
+    ROOT.title("Pylieff")
+    ROOT.geometry(f"{window_x}x{window_y}")
+
+    # Create player pieces
+
+    player_board("Player 1", P_WIDTH * .4, 100, start, P1_COLOR)
+    player_board("Player 2", (start * 3) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)), 100, start, P2_COLOR)
 
 
     # Create Game Board
-    canvas = Canvas(root, width = 100 + (interval * 4), height = 100 + (interval * 4), bg="white")
-    canvas.place(x = 250, y = 100)
+    game_board = Canvas(ROOT, width = (start * 2) + (INTERVAL * 4), height = (start * 2) + (INTERVAL * 4), bg="white")
+    game_board.place(x = ((start * 4) + (INTERVAL * 2)), y = 100)
     
-    canvas.bind("<Button-1>", on_click)
+    game_board.create_rectangle(start, start, start + (INTERVAL * 4), start + (INTERVAL * 4), width = 3)
+    
 
-    next_x = start
-    next_y = start
-    canvas.create_line(start-1, start, start, start, width=3)
+    next_x = start +  INTERVAL
+    next_y = start + INTERVAL
 
-    for i in range(5):
-        canvas.create_line(next_x, start, next_x, end, width=3)
-        canvas.create_line(start, next_y, end, next_y, width=3)
+    for i in range(4):
+        game_board.create_line(next_x, start, next_x, end, width=3)
+        game_board.create_line(start, next_y, end, next_y, width=3)
 
-        next_x += interval
-        next_y += interval
+        next_x += INTERVAL
+        next_y += INTERVAL
 
     space = []
 
     for i in range(16):
-        space.append(Canvas(root, width = b_width, height = b_width, bg="gray"))
-        
-    start_x = 299
-    start_y = 149
+        space.append(Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=B_COLOR))
+
+    start_x = ((start * 4) + (INTERVAL * 2)) + start + 2
+    start_y = 102 + start
     board_x = 0
     board_y = 0
 
     for i in range(16):
-        space[i].place(x = start_x + board_x, y = start_y + board_y, width = b_width, height = b_width)
+        space[i].place(x = start_x + board_x, y = start_y + board_y, width = P_WIDTH, height = P_WIDTH)
         space[i].bind("<Enter>", on_enter)
-        space[i].bind("<Leave>", on_leave)
-        space[i].bind("<Button-1>", on_click)
-        board_x += interval
-        if board_x > 3 * interval:
-            board_y += interval
+        space[i].bind("<Leave>", partial(on_leave, "Game Board"))
+        space[i].bind("<Button-1>", partial(on_click_board))
+        board_x += INTERVAL
+        if board_x > 3 * INTERVAL:
+            board_y += INTERVAL
             board_x = 0
 
-    root.mainloop()
+    ROOT.mainloop()
