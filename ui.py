@@ -33,7 +33,18 @@ p_score = {
 }
 
 def on_enter(event):
-    event.widget.config(bg="blue")
+
+    if "!canvas" not in str(event.widget).split(".")[-1] and last_piece_played["key"] != '':
+       
+        sp_x, sp_y = [int(s) for s in (str(event.widget).split(".")[-1].split(','))]
+
+        if check_valid_place(sp_x, sp_y):
+            event.widget.config(bg="blue")
+        else:
+            event.widget.config(bg="black")
+    else:
+        event.widget.config(bg="blue")
+
 
 def on_leave(board, event):
     if board == "Player 1":
@@ -73,23 +84,28 @@ def on_click_board(event):
     w_x = event.widget.winfo_x()
     w_y = event.widget.winfo_y()
 
-    if not last_piece_selected["placed"]:
+    if event.widget.cget("bg") == "blue":
 
-        last_piece_selected["placed"] = True
+        if not last_piece_selected["placed"]:
 
-        pp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=last_piece_selected["color"])
-        pp_canvas.place(x = w_x, y = w_y)
+            last_piece_selected["placed"] = True
 
-        event.widget.place_forget()
+            pp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=last_piece_selected["color"])
+            pp_canvas.place(x = w_x, y = w_y)
 
-        show_piece(last_piece_selected["key"], pp_canvas)
+            event.widget.place_forget()
 
-        last_piece_played["key"] = last_piece_selected["key"]
-        last_piece_played["player"] = last_piece_selected["player"]
-        last_piece_played["space"] = str(event.widget).split(".")[-1]
-    
-        record_piece()
-        check_score()
+            show_piece(last_piece_selected["key"], pp_canvas)
+
+            last_piece_played["key"] = last_piece_selected["key"]
+            last_piece_played["player"] = last_piece_selected["player"]
+            last_piece_played["space"] = str(event.widget).split(".")[-1]
+            
+            record_piece()
+            check_score()
+
+    elif event.widget.cget("bg") == "black":
+        print("INVALID PLACEMENT")
 
     print(f"Player 1's score is {p_score["Player 1"]}")
     print(f"Player 2's score is {p_score["Player 2"]}")
@@ -107,100 +123,111 @@ def check_score():
     global p_score
 
     sp_x, sp_y = [int(s) for s in (last_piece_played["space"].split(','))]
+    
 
     # check for line with piece as start/end of line horizontal
     if sp_y <= 1:
-        if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-            game_board_state[sp_x][sp_y + 1] == last_piece_played["player"] and
-            game_board_state[sp_x][sp_y + 2] == last_piece_played["player"]
-        ):
-            print(f"Scored")
+        if check_connected([sp_x, sp_y], [sp_x, sp_y + 1], [sp_x, sp_y + 2]):
+            print(f"Scored: 1")
             p_score[last_piece_played["player"]] += 1
     if sp_y >= 2:
-        if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-            game_board_state[sp_x][sp_y - 1] == last_piece_played["player"] and
-            game_board_state[sp_x][sp_y - 2] == last_piece_played["player"]
-        ):
-            print(f"Scored")
+        if check_connected([sp_x, sp_y], [sp_x, sp_y - 1], [sp_x, sp_y - 2]):
+            print(f"Scored: 2")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as middle of line horizontal
     if sp_y == 1 or sp_y == 2:
-        if (game_board_state[sp_x][sp_y - 1] == last_piece_played["player"] and 
-            game_board_state[sp_x][sp_y] == last_piece_played["player"] and
-            game_board_state[sp_x][sp_y + 1] == last_piece_played["player"]
-        ):
-            print(f"Scored")
+        if check_connected([sp_x, sp_y - 1], [sp_x, sp_y], [sp_x, sp_y + 1]):
+            print(f"Scored: 3")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as start/end of line vertical
     if sp_x <= 1:
-        if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-            game_board_state[sp_x + 1][sp_y] == last_piece_played["player"] and
-            game_board_state[sp_x + 2][sp_y] == last_piece_played["player"]
-        ):
-            print(f"Scored")
+        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y], [sp_x + 2, sp_y]):
+            print(f"Scored: 4")
             p_score[last_piece_played["player"]] += 1
     if sp_x >= 2:
-        if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-            game_board_state[sp_x - 1][sp_y] == last_piece_played["player"] and
-            game_board_state[sp_x - 2][sp_y] == last_piece_played["player"]
-        ):
-            print(f"Scored")
+        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y], [sp_x - 2, sp_y]):
+            print(f"Scored: 5")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as middle of line vertical
     if sp_x == 1 or sp_x == 2:
-        if (game_board_state[sp_x - 1][sp_y] == last_piece_played["player"] and 
-            game_board_state[sp_x][sp_y] == last_piece_played["player"] and
-            game_board_state[sp_x + 1][sp_y] == last_piece_played["player"]
-        ):
-            print(f"Scored")
+        if check_connected([sp_x - 1, sp_y], [sp_x, sp_y], [sp_x + 1, sp_y]): 
+            print(f"Scored: 6")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as start/end of line diagonal
     try:
         if sp_y <= 1:
-            if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-                game_board_state[sp_x + 1][sp_y + 1] == last_piece_played["player"] and
-                game_board_state[sp_x + 2][sp_y + 2] == last_piece_played["player"]
-            ):
-                print(f"Scored")
+            if check_connected([sp_x, sp_y], [sp_x + 1, sp_y + 1], [sp_x + 2, sp_y + 2]):
+                print(f"Scored: 7")
                 p_score[last_piece_played["player"]] += 1
-            if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-                game_board_state[sp_x - 1][sp_y + 1] == last_piece_played["player"] and
-                game_board_state[sp_x - 2][sp_y + 2] == last_piece_played["player"]
-            ):
-                print(f"Scored")
+            if check_connected([sp_x, sp_y], [sp_x - 1, sp_y + 1], [sp_x - 2, sp_y + 2]):
+                print(f"Scored: 8")
                 p_score[last_piece_played["player"]] += 1
         if sp_y >= 2:
-            if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-                game_board_state[sp_x - 1][sp_y - 1] == last_piece_played["player"] and
-                game_board_state[sp_x - 2][sp_y - 2] == last_piece_played["player"]
-            ):
-                print(f"Scored")
+            if check_connected([sp_x, sp_y], [sp_x - 1, sp_y - 1], [sp_x - 2, sp_y - 2]):
+                print(f"Scored: 9")
                 p_score[last_piece_played["player"]] += 1
-            if (game_board_state[sp_x][sp_y] == last_piece_played["player"] and 
-                game_board_state[sp_x + 1][sp_y - 1] == last_piece_played["player"] and
-                game_board_state[sp_x + 2][sp_y - 2] == last_piece_played["player"]
-            ):
-                print(f"Scored")
+            if check_connected([sp_x, sp_y], [sp_x + 1, sp_y - 1], [sp_x + 2, sp_y - 2]):
+                print(f"Scored: 10")
                 p_score[last_piece_played["player"]] += 1
 
         # check for line with piece as middle of line diagonal
         if sp_x == 1 or sp_x == 2:
-            if (game_board_state[sp_x - 1][sp_y - 1] == last_piece_played["player"] and 
-                game_board_state[sp_x][sp_y] == last_piece_played["player"] and
-                game_board_state[sp_x + 1][sp_y + 1] == last_piece_played["player"]
-            ) or (game_board_state[sp_x + 1][sp_y - 1] == last_piece_played["player"] and 
-                  game_board_state[sp_x][sp_y] == last_piece_played["player"] and
-                  game_board_state[sp_x - 1][sp_y + 1] == last_piece_played["player"]
-
-            ):
-                print(f"Scored")
+            if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
+                print(f"Scored: 11")
                 p_score[last_piece_played["player"]] += 1
     except:
         pass
+
+def check_connected(space1, space2, space3):
+    if (game_board_state[space1[0]][space1[1]] == last_piece_played["player"] and 
+        game_board_state[space2[0]][space2[1]] == last_piece_played["player"] and
+        game_board_state[space3[0]][space3[1]] == last_piece_played["player"]
+    ):
+        return True
+    else:
+        return False
+
+def check_valid_place(sp_x, sp_y):
+
+    lp_x, lp_y = [int(s) for s in (last_piece_played["space"].split(','))]
+    if "xcross" in last_piece_played["key"]:        
+
+        pos_xy = []
+        for i in range(1, 4):
+            if ((lp_x - i) >= 0) or ((lp_x + i) <= 3) or ((lp_y - i) >= 0) or ((lp_y + i) <= 3):
+                pos_xy.append(f"{lp_x + i}, {lp_y + i}")
+                pos_xy.append(f"{lp_x + i}, {lp_y - i}")
+                pos_xy.append(f"{lp_x - i}, {lp_y + i}")
+                pos_xy.append(f"{lp_x - i}, {lp_y - i}")
+
+        if str(f"{sp_x}, {sp_y}") in pos_xy:
+            return True
+        else:
+            return False
+
+    if "cross" in last_piece_played["key"]:
+        if (lp_x == sp_x) or (lp_y == sp_y):
+            return True
+        else:
+            return False
+        
+    if "xcircle" in last_piece_played["key"]:
+        if (((sp_x < lp_x -1) or (sp_x > lp_x + 1)) or ((sp_y < lp_y - 1) or (sp_y > lp_y + 1))):
+            return True
+        else:
+            return False
+        
+    if "circle" in last_piece_played["key"]:
+        if (((sp_x == lp_x) or (sp_x == lp_x - 1) or (sp_x == lp_x + 1)) and 
+            ((sp_y == lp_y) or (sp_y == lp_y + 1) or (sp_y == lp_y - 1))):
+
+            return True
+        else:
+            return False
 
 
 def show_piece(key, canvas):
