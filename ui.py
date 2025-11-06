@@ -1,7 +1,7 @@
 from tkinter import *
 from functools import partial
 
-from config import P1_COLOR, P2_COLOR, B_COLOR, P_WIDTH, INTERVAL, ROOT
+from config import P1_COLOR, P1_NAME, P2_COLOR, P2_NAME, B_COLOR, P_WIDTH, INTERVAL, ROOT
 
 # Track last piece selected
 last_piece_selected = {
@@ -32,6 +32,8 @@ p_score = {
     "Player 2": 0,
 }
 
+current_player = P1_NAME
+
 def on_enter(event):
 
     if "!canvas" not in str(event.widget).split(".")[-1] and last_piece_played["key"] != '':
@@ -60,26 +62,30 @@ def on_click_player(key, player, color, event):
 
     win_width = ROOT.winfo_width()
 
-    sp_x = (win_width - P_WIDTH) / 2
+    if current_player == player:
 
-    sp_label = Label(ROOT, text = f" {player}'s Selected Piece")
-    sp_label.place(x = sp_x, y = 5)
+        sp_x = (win_width - P_WIDTH) / 2
 
-    sp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=color)
-    sp_canvas.place(x = sp_x, y = 25)
+        sp_label = Label(ROOT, text = f" {player}'s Selected Piece")
+        sp_label.place(x = sp_x, y = 5)
 
-    event.widget.place_forget()
+        sp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=color)
+        sp_canvas.place(x = sp_x, y = 25)
 
-    sp_canvas.create_rectangle(1, 1, P_WIDTH, P_WIDTH, width = 1)
+        event.widget.place_forget()
 
-    show_piece(key, sp_canvas)
+        sp_canvas.create_rectangle(1, 1, P_WIDTH, P_WIDTH, width = 1)
 
-    last_piece_selected["key"] = key
-    last_piece_selected["color"] = color
-    last_piece_selected["player"] = player
-    last_piece_selected["placed"] = False
+        show_piece(key, sp_canvas)
 
-def on_click_board(event):
+        last_piece_selected["key"] = key
+        last_piece_selected["color"] = color
+        last_piece_selected["player"] = player
+        last_piece_selected["placed"] = False
+
+def on_click_board(current_label, p1_label, p2_label, event):
+
+    global current_player
 
     w_x = event.widget.winfo_x()
     w_y = event.widget.winfo_y()
@@ -104,11 +110,25 @@ def on_click_board(event):
             record_piece()
             check_score()
 
+            if current_player == P1_NAME:
+                current_player = P2_NAME
+                current_label.config(text = f"Current Player: {current_player}")
+            else:
+                current_player = P1_NAME
+                current_label.config(text = f"Current Player: {current_player}")
+
     elif event.widget.cget("bg") == "black":
         print("INVALID PLACEMENT")
 
+    p1_text = p1_label["text"].split(":")
+    p2_text = p2_label["text"].split(":")
+
+    p1_label.config(text = f"{p1_text[0]}: {p_score["Player 1"]}")
+    p2_label.config(text = f"{p2_text[0]}: {p_score["Player 2"]}")
+
     print(f"Player 1's score is {p_score["Player 1"]}")
     print(f"Player 2's score is {p_score["Player 2"]}")
+    print(f"Current Player: {current_player}")
 
 def record_piece(): 
    
@@ -284,11 +304,13 @@ def draw_shapes(shape):
 
 def player_board(player, p_x, p_y, start, color):
     # Player 1 Pieces
-
     player_name = Label(ROOT, text = f"{player}'s pieces")
-    p_canvas = Canvas(ROOT, width = (start * 2) + (INTERVAL * 2), height  = (start * 2) + (INTERVAL * 4), bg="white")
+    player_score = Label(ROOT, text = f"{player}'s score: {p_score[player]}")
+
+    p_canvas = Canvas(ROOT, width = (start * 2) + (INTERVAL * 2), height  = (start * 2) + (INTERVAL * 4), bg="gray")
     p_canvas.place(x = p_x, y = p_y)
     player_name.place(x = p_x, y = p_y - 50)
+    player_score.place(x = p_x, y = p_y -25)
     
 
     p_canvas.create_rectangle(start, start, start + (INTERVAL * 2), start + (INTERVAL * 4), width = 3)
@@ -298,18 +320,18 @@ def player_board(player, p_x, p_y, start, color):
     p_canvas.create_line(start, start + (INTERVAL * 3), start + (INTERVAL * 2), start + (INTERVAL * 3), width = 3)
 
     p_pieces = {
-        "cross_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "cross_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "xcross_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "xcross_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "circle_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "circle_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "xcircle_1" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
-        "xcircle_2" : Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "cross_1" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "cross_2" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcross_1" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcross_2" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "circle_1" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "circle_2" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcircle_1" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
+        "xcircle_2" : Canvas(p_canvas, width = P_WIDTH, height = P_WIDTH, bg=color),
     }
 
-    p_start_x = p_x + start + 2
-    p_start_y = p_y + start + 2
+    p_start_x = start + 2
+    p_start_y = start + 2
     p_board_x = 0
     p_board_y = 0
 
@@ -328,6 +350,8 @@ def player_board(player, p_x, p_y, start, color):
             p_board_y += INTERVAL
             p_board_x = 0
 
+    return player_score
+
 
 def ui():
 
@@ -342,12 +366,14 @@ def ui():
 
     # Create player pieces
 
-    player_board("Player 1", P_WIDTH * .4, 100, start, P1_COLOR)
-    player_board("Player 2", (start * 3) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)), 100, start, P2_COLOR)
+    p1_label = player_board(P1_NAME, P_WIDTH * .4, 100, start, P1_COLOR)
+    p2_label = player_board(P2_NAME, (start * 3) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)), 100, start, P2_COLOR)
 
+    current_label = Label(ROOT, text = f"Current Player: {current_player}")
+    current_label.place(x = start + INTERVAL, y = start)
 
     # Create Game Board
-    game_board = Canvas(ROOT, width = (start * 2) + (INTERVAL * 4), height = (start * 2) + (INTERVAL * 4), bg="white")
+    game_board = Canvas(ROOT, width = (start * 2) + (INTERVAL * 4), height = (start * 2) + (INTERVAL * 4), bg="gray")
     game_board.place(x = ((start * 4) + (INTERVAL * 2)), y = 100)
     
     game_board.create_rectangle(start, start, start + (INTERVAL * 4), start + (INTERVAL * 4), width = 3)
@@ -378,7 +404,7 @@ def ui():
         space.place(x = start_x + board_x, y = start_y + board_y, width = P_WIDTH, height = P_WIDTH)
         space.bind("<Enter>", on_enter)
         space.bind("<Leave>", partial(on_leave, "Game Board"))
-        space.bind("<Button-1>", partial(on_click_board))
+        space.bind("<Button-1>", partial(on_click_board, current_label, p1_label, p2_label))
         board_x += INTERVAL
         if board_x > 3 * INTERVAL:
             board_y += INTERVAL
