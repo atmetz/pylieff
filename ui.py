@@ -32,6 +32,11 @@ p_score = {
     "Player 2": 0,
 }
 
+p_count = {
+    P1_NAME: 8,
+    P2_NAME: 8
+}
+
 current_player = P1_NAME
 
 def on_enter(event):
@@ -86,6 +91,7 @@ def on_click_player(key, player, color, event):
 def on_click_board(current_label, p1_label, p2_label, event):
 
     global current_player
+    global last_piece_played
 
     w_x = event.widget.winfo_x()
     w_y = event.widget.winfo_y()
@@ -110,12 +116,16 @@ def on_click_board(current_label, p1_label, p2_label, event):
             record_piece()
             check_score()
 
-            if current_player == P1_NAME:
+            if current_player == P1_NAME and check_valid_any():
                 current_player = P2_NAME
                 current_label.config(text = f"Current Player: {current_player}")
-            else:
+            elif current_player == P2_NAME and check_valid_any():
                 current_player = P1_NAME
                 current_label.config(text = f"Current Player: {current_player}")
+            else:
+                last_piece_played["key"] = ''
+                last_piece_played["player"] = ''
+                last_piece_played["space"] = []
 
     elif event.widget.cget("bg") == "black":
         print("INVALID PLACEMENT")
@@ -126,17 +136,24 @@ def on_click_board(current_label, p1_label, p2_label, event):
     p1_label.config(text = f"{p1_text[0]}: {p_score["Player 1"]}")
     p2_label.config(text = f"{p2_text[0]}: {p_score["Player 2"]}")
 
-    print(f"Player 1's score is {p_score["Player 1"]}")
-    print(f"Player 2's score is {p_score["Player 2"]}")
-    print(f"Current Player: {current_player}")
+    if p_count[P1_NAME] == 0 or p_count[P2_NAME] == 0:
+        print("Game Over")
+        if p_score["Player 1"] > p_score["Player 2"]:
+            print("Player 1 Wins!")
+        elif p_score["Player 2"] > p_score["Player 1"]:
+            print("Player 2 Wins!")
+        else:
+            print("Game Tied")
 
 def record_piece(): 
    
     global game_board_state
+    global p_count
 
     coords = last_piece_played["space"].split(',')
 
     game_board_state[int(coords[0])][int(coords[1])] = last_piece_selected["player"]
+    p_count[current_player] -= 1
 
 def check_score():
 
@@ -248,6 +265,16 @@ def check_valid_place(sp_x, sp_y):
             return True
         else:
             return False
+        
+def check_valid_any():
+
+    for x in range(4):
+        for y in range(4):
+            if check_valid_place(x, y):
+                if (P1_NAME not in game_board_state[x][y] and P2_NAME not in game_board_state[x][y]):
+                    return True
+
+    return False
 
 
 def show_piece(key, canvas):
