@@ -183,61 +183,55 @@ def check_score():
     # check for line with piece as start/end of line horizontal
     if sp_y <= 1:
         if check_connected([sp_x, sp_y], [sp_x, sp_y + 1], [sp_x, sp_y + 2]):
-            print("Scored: 1")
             p_score[last_piece_played["player"]] += 1
     if sp_y >= 2:
         if check_connected([sp_x, sp_y], [sp_x, sp_y - 1], [sp_x, sp_y - 2]):
-            print("Scored: 2")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as middle of line horizontal
     if sp_y == 1 or sp_y == 2:
         if check_connected([sp_x, sp_y - 1], [sp_x, sp_y], [sp_x, sp_y + 1]):
-            print("Scored: 3")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as start/end of line vertical
     if sp_x <= 1:
         if check_connected([sp_x, sp_y], [sp_x + 1, sp_y], [sp_x + 2, sp_y]):
-            print("Scored: 4")
             p_score[last_piece_played["player"]] += 1
     if sp_x >= 2:
         if check_connected([sp_x, sp_y], [sp_x - 1, sp_y], [sp_x - 2, sp_y]):
-            print("Scored: 5")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as middle of line vertical
     if sp_x == 1 or sp_x == 2:
         if check_connected([sp_x - 1, sp_y], [sp_x, sp_y], [sp_x + 1, sp_y]):
-            print("Scored: 6")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as start/end of line diagonal
-    try:
-        if sp_y <= 1:
-            if check_connected([sp_x, sp_y], [sp_x + 1, sp_y + 1], [sp_x + 2, sp_y + 2]):
-                print("Scored: 7")
-                p_score[last_piece_played["player"]] += 1
-            if check_connected([sp_x, sp_y], [sp_x - 1, sp_y + 1], [sp_x - 2, sp_y + 2]):
-                print("Scored: 8")
-                p_score[last_piece_played["player"]] += 1
-        if sp_y >= 2:
-            if check_connected([sp_x, sp_y], [sp_x - 1, sp_y - 1], [sp_x - 2, sp_y - 2]):
-                print("Scored: 9")
-                p_score[last_piece_played["player"]] += 1
-            if check_connected([sp_x, sp_y], [sp_x + 1, sp_y - 1], [sp_x + 2, sp_y - 2]):
-                print("Scored: 10")
-                p_score[last_piece_played["player"]] += 1
+    if sp_x <= 1 and sp_y <= 1:
+        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y + 1], [sp_x + 2, sp_y + 2]):
+            p_score[last_piece_played["player"]] += 1    
+    if sp_x <= 1 and sp_y >= 2:
+        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y - 1], [sp_x + 2, sp_y - 2]):
+            p_score[last_piece_played["player"]] += 1    
+    if sp_x >= 2 and sp_y >= 2:
+        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y - 1], [sp_x - 2, sp_y - 2]):
+            p_score[last_piece_played["player"]] += 1    
+    if sp_x >= 2 and sp_y <= 1:
+        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y + 1], [sp_x - 2, sp_y + 2]):
+            p_score[last_piece_played["player"]] += 1
 
-        # check for line with piece as middle of line diagonal
-        if sp_x == 1 or sp_x == 2:
-            if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
-                print("Scored: 11")
-                p_score[last_piece_played["player"]] += 1
-    except:
-        pass
+    # check for line with piece as middle of line diagonal
+    if sp_x == 1 or sp_x == 2:
+        if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
+            print("Scored: 11")
+            p_score[last_piece_played["player"]] += 1
 
 def check_connected(space1, space2, space3):
+    if ((space1[0] < 0 or space1[0] > 3) or (space1[1] < 0 or space1[1] > 3) or 
+        (space2[0] < 0 or space2[0] > 3) or (space2[1] < 0 or space2[1] > 3) or
+        (space3[0] < 0 or space3[0] > 3) or (space3[1] < 0 or space3[1] > 3)):
+        return False
+
     if (game_board_state[space1[0]][space1[1]] == last_piece_played["player"] and 
         game_board_state[space2[0]][space2[1]] == last_piece_played["player"] and
         game_board_state[space3[0]][space3[1]] == last_piece_played["player"]
