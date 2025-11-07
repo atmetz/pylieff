@@ -3,41 +3,6 @@ from functools import partial
 
 from config import P1_COLOR, P1_NAME, P2_COLOR, P2_NAME, B_COLOR, P_WIDTH, INTERVAL, ROOT
 
-# Track last piece selected
-last_piece_selected = {
-    "key": '',
-    "color": 'gray',
-    "player": '',
-    "piece": '',
-    "placed": False
-}
-
-# Track last piece played
-last_piece_played = {
-    "key": '',
-    "player": '',
-    "space": [],
-}
-
-# Track game board state
-game_board_state = [
-    ["0x0", "1x0", "2x0", "3x0"],
-    ["0x1", "1x1", "2x1", "3x1"],
-    ["0x2", "1x2", "2x2", "2x3"],
-    ["0x3", "1x3", "2x3", "3x3"],
-]
-
-# Track player score
-p_score = {
-    P1_NAME: 0,
-    P2_NAME: 0,
-}
-
-p_count = {
-    P1_NAME: 8,
-    P2_NAME: 8
-}
-
 current_player = P1_NAME
 
 def on_enter(event):
@@ -394,7 +359,6 @@ def player_board(player, p_x, p_y, start, color, message_label):
 def new_game():
     for widget in ROOT.winfo_children():
         widget.destroy()
-    init_game_state()
     ui()
 
 def init_game_state():
@@ -442,8 +406,55 @@ def init_game_state():
 
     current_player = P1_NAME
 
+def change_settings():
+    config = Toplevel()
+    config.title("Settings")
+    config.geometry("200x200")
+
+    p1_label = Label(config, text = "Player 1:")    
+    p2_label = Label(config, text = "Player 2:")
+    p1_entry = Entry(config, width = 10)
+    p2_entry = Entry(config, width = 10)
+    p1_entry.insert(END, P1_NAME)
+    p2_entry.insert(END, P2_NAME)
+
+    p1_label.place(x = 10, y = 10)
+    p2_label.place(x = 10, y = 40)
+
+    p1_entry.place(x = 75, y = 10)
+    p2_entry.place(x = 75, y = 40)
+
+    size_option = IntVar(config, 50)
+
+    Label(config, text = "Size:").place(x = 10, y = 70)
+    Radiobutton(config, text = "Small", variable=size_option, value=50).place(x = 50, y = 70)
+    Radiobutton(config, text = "Medium", variable=size_option, value=100).place(x = 50, y = 90)
+    Radiobutton(config, text = "Large", variable=size_option, value=150).place(x = 50, y = 110)
+
+    Button(config, text = "Save", command = lambda: save_settings(p1_entry.get(), p2_entry.get(), size_option.get(), config)).place(x = 10, y = 150)
+
+    Button(config, text = "Cancel", command = config.destroy).place(x = 75, y = 150)
+
+
+    
+def save_settings(p1, p2, size, config):
+    global P1_NAME
+    global P2_NAME
+    global P_WIDTH
+
+    P1_NAME = p1
+    P2_NAME = p2
+
+    P_WIDTH = size
+    
+    config.destroy()
+
+    new_game()
+
 
 def ui():
+
+    init_game_state()
 
     start = 20
     end = start + 2 + (INTERVAL * 4)
@@ -458,11 +469,10 @@ def ui():
     ROOT.config(menu = menubar)
 
     game_menu = Menu(menubar, tearoff = 0)
-    config_menu = Menu(menubar, tearoff = 0)
     menubar.add_cascade(label="Game", menu=game_menu)
-    menubar.add_cascade(label="Config", menu=config_menu)
 
     game_menu.add_command(label = "New Game", command = new_game)
+    game_menu.add_command(label = "Settings", command = change_settings)
 
     message_label = Label(ROOT, text='')
     message_label.place(x = start, y = 400)
