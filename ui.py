@@ -8,6 +8,7 @@ last_piece_selected = {
     "key": '',
     "color": 'gray',
     "player": '',
+    "piece": '',
     "placed": False
 }
 
@@ -28,8 +29,8 @@ game_board_state = [
 
 # Track player score
 p_score = {
-    "Player 1": 0,
-    "Player 2": 0,
+    P1_NAME: 0,
+    P2_NAME: 0,
 }
 
 p_count = {
@@ -54,20 +55,23 @@ def on_enter(event):
 
 
 def on_leave(board, event):
-    if board == "Player 1":
+    if board == P1_NAME:
         event.widget.config(bg=P1_COLOR)
-    elif board == "Player 2":
+    elif board == P2_NAME:
         event.widget.config(bg=P2_COLOR)
     else:
         event.widget.config(bg=B_COLOR)
 
-def on_click_player(key, player, color, event):
+def on_click_player(key, player, color, piece, message_label, event):
 
     global last_piece_selected
 
     win_width = ROOT.winfo_width()
-
+    
     if current_player == player:
+
+        if last_piece_selected["piece"]:
+         show_piece(last_piece_selected["key"], last_piece_selected["piece"])
 
         sp_x = (win_width - P_WIDTH) / 2
 
@@ -77,73 +81,87 @@ def on_click_player(key, player, color, event):
         sp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=color)
         sp_canvas.place(x = sp_x, y = 25)
 
-        event.widget.place_forget()
+        event.widget.delete("all")
 
-        sp_canvas.create_rectangle(1, 1, P_WIDTH, P_WIDTH, width = 1)
+        sp_canvas.create_rectangle(0, 0, P_WIDTH, P_WIDTH, width = 3)
 
         show_piece(key, sp_canvas)
 
         last_piece_selected["key"] = key
         last_piece_selected["color"] = color
         last_piece_selected["player"] = player
+        last_piece_selected["piece"] = piece
         last_piece_selected["placed"] = False
 
-def on_click_board(current_label, p1_label, p2_label, event):
+    else:
+        message_label.config(text = f"It is {current_player}'s turn.")
+
+def on_click_board(message_label, current_label, p1_label, p2_label, event):
 
     global current_player
     global last_piece_played
+    global last_piece_selected
 
     w_x = event.widget.winfo_x()
     w_y = event.widget.winfo_y()
 
-    if event.widget.cget("bg") == "blue":
+    message_label.config(text = '')
 
-        if not last_piece_selected["placed"]:
+    if last_piece_selected["key"] != '':
 
-            last_piece_selected["placed"] = True
+        if event.widget.cget("bg") == "blue":
 
-            pp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=last_piece_selected["color"])
-            pp_canvas.place(x = w_x, y = w_y)
+            if not last_piece_selected["placed"]:
 
-            event.widget.place_forget()
+                last_piece_selected["placed"] = True
 
-            show_piece(last_piece_selected["key"], pp_canvas)
+                pp_canvas = Canvas(ROOT, width = P_WIDTH, height  = P_WIDTH, bg=last_piece_selected["color"])
+                pp_canvas.place(x = w_x, y = w_y)
 
-            last_piece_played["key"] = last_piece_selected["key"]
-            last_piece_played["player"] = last_piece_selected["player"]
-            last_piece_played["space"] = str(event.widget).split(".")[-1]
-            
-            record_piece()
-            check_score()
+                event.widget.place_forget()
 
-            if current_player == P1_NAME and check_valid_any():
-                current_player = P2_NAME
-                current_label.config(text = f"Current Player: {current_player}")
-            elif current_player == P2_NAME and check_valid_any():
-                current_player = P1_NAME
-                current_label.config(text = f"Current Player: {current_player}")
+                show_piece(last_piece_selected["key"], pp_canvas)
+
+                last_piece_played["key"] = last_piece_selected["key"]
+                last_piece_played["player"] = last_piece_selected["player"]
+                last_piece_played["space"] = str(event.widget).split(".")[-1]
+
+                last_piece_selected["piece"] = ''
+                
+                record_piece()
+                check_score()
+
+                if current_player == P1_NAME and check_valid_any():
+                    current_player = P2_NAME
+                    current_label.config(text = f"Current Player: {current_player}")
+                elif current_player == P2_NAME and check_valid_any():
+                    current_player = P1_NAME
+                    current_label.config(text = f"Current Player: {current_player}")
+                else:
+                    last_piece_played["key"] = ''
+                    last_piece_played["player"] = ''
+                    last_piece_played["space"] = []
+                    message_label.config(text = f"No valid placement available. {current_player} goes again.")
+
+        elif event.widget.cget("bg") == "black":
+            message_label.config(text = "INVALID PLACEMENT")
+
+        p1_text = p1_label["text"].split(":")
+        p2_text = p2_label["text"].split(":")
+
+        p1_label.config(text = f"{p1_text[0]}: {p_score[P1_NAME]}")
+        p2_label.config(text = f"{p2_text[0]}: {p_score[P2_NAME]}")
+
+        if p_count[current_player] == 0:
+            if p_score[P1_NAME] > p_score[P2_NAME]:
+                message_label.config(text = f"Game Over! {P1_NAME} Wins!")
+            elif p_score[P2_NAME] > p_score[P1_NAME]:
+                message_label.config(text = f"Game Over! {P2_NAME} Wins!")
             else:
-                last_piece_played["key"] = ''
-                last_piece_played["player"] = ''
-                last_piece_played["space"] = []
+                message_label.config(text = "Game Tied!")
 
-    elif event.widget.cget("bg") == "black":
-        print("INVALID PLACEMENT")
-
-    p1_text = p1_label["text"].split(":")
-    p2_text = p2_label["text"].split(":")
-
-    p1_label.config(text = f"{p1_text[0]}: {p_score["Player 1"]}")
-    p2_label.config(text = f"{p2_text[0]}: {p_score["Player 2"]}")
-
-    if p_count[P1_NAME] == 0 or p_count[P2_NAME] == 0:
-        print("Game Over")
-        if p_score["Player 1"] > p_score["Player 2"]:
-            print("Player 1 Wins!")
-        elif p_score["Player 2"] > p_score["Player 1"]:
-            print("Player 2 Wins!")
-        else:
-            print("Game Tied")
+    else:
+        message_label.config(text = f"{current_player}, please select a piece to play.")
 
 def record_piece(): 
    
@@ -165,56 +183,56 @@ def check_score():
     # check for line with piece as start/end of line horizontal
     if sp_y <= 1:
         if check_connected([sp_x, sp_y], [sp_x, sp_y + 1], [sp_x, sp_y + 2]):
-            print(f"Scored: 1")
+            print("Scored: 1")
             p_score[last_piece_played["player"]] += 1
     if sp_y >= 2:
         if check_connected([sp_x, sp_y], [sp_x, sp_y - 1], [sp_x, sp_y - 2]):
-            print(f"Scored: 2")
+            print("Scored: 2")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as middle of line horizontal
     if sp_y == 1 or sp_y == 2:
         if check_connected([sp_x, sp_y - 1], [sp_x, sp_y], [sp_x, sp_y + 1]):
-            print(f"Scored: 3")
+            print("Scored: 3")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as start/end of line vertical
     if sp_x <= 1:
         if check_connected([sp_x, sp_y], [sp_x + 1, sp_y], [sp_x + 2, sp_y]):
-            print(f"Scored: 4")
+            print("Scored: 4")
             p_score[last_piece_played["player"]] += 1
     if sp_x >= 2:
         if check_connected([sp_x, sp_y], [sp_x - 1, sp_y], [sp_x - 2, sp_y]):
-            print(f"Scored: 5")
+            print("Scored: 5")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as middle of line vertical
     if sp_x == 1 or sp_x == 2:
-        if check_connected([sp_x - 1, sp_y], [sp_x, sp_y], [sp_x + 1, sp_y]): 
-            print(f"Scored: 6")
+        if check_connected([sp_x - 1, sp_y], [sp_x, sp_y], [sp_x + 1, sp_y]):
+            print("Scored: 6")
             p_score[last_piece_played["player"]] += 1
 
     # check for line with piece as start/end of line diagonal
     try:
         if sp_y <= 1:
             if check_connected([sp_x, sp_y], [sp_x + 1, sp_y + 1], [sp_x + 2, sp_y + 2]):
-                print(f"Scored: 7")
+                print("Scored: 7")
                 p_score[last_piece_played["player"]] += 1
             if check_connected([sp_x, sp_y], [sp_x - 1, sp_y + 1], [sp_x - 2, sp_y + 2]):
-                print(f"Scored: 8")
+                print("Scored: 8")
                 p_score[last_piece_played["player"]] += 1
         if sp_y >= 2:
             if check_connected([sp_x, sp_y], [sp_x - 1, sp_y - 1], [sp_x - 2, sp_y - 2]):
-                print(f"Scored: 9")
+                print("Scored: 9")
                 p_score[last_piece_played["player"]] += 1
             if check_connected([sp_x, sp_y], [sp_x + 1, sp_y - 1], [sp_x + 2, sp_y - 2]):
-                print(f"Scored: 10")
+                print("Scored: 10")
                 p_score[last_piece_played["player"]] += 1
 
         # check for line with piece as middle of line diagonal
         if sp_x == 1 or sp_x == 2:
             if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
-                print(f"Scored: 11")
+                print("Scored: 11")
                 p_score[last_piece_played["player"]] += 1
     except:
         pass
@@ -329,7 +347,7 @@ def draw_shapes(shape):
 
     return points
 
-def player_board(player, p_x, p_y, start, color):
+def player_board(player, p_x, p_y, start, color, message_label):
     # Player 1 Pieces
     player_name = Label(ROOT, text = f"{player}'s pieces")
     player_score = Label(ROOT, text = f"{player}'s score: {p_score[player]}")
@@ -368,7 +386,7 @@ def player_board(player, p_x, p_y, start, color):
         p_pieces[key].place(x = p_start_x + p_board_x, y = p_start_y + p_board_y, width = P_WIDTH, height = P_WIDTH)
         p_pieces[key].bind("<Enter>", on_enter)
         p_pieces[key].bind("<Leave>", partial(on_leave, player))
-        p_pieces[key].bind("<Button-1>", partial(on_click_player, key, player, color))
+        p_pieces[key].bind("<Button-1>", partial(on_click_player, key, player, color, p_pieces[key], message_label))
 
         show_piece(key, p_pieces[key])
 
@@ -378,6 +396,57 @@ def player_board(player, p_x, p_y, start, color):
             p_board_x = 0
 
     return player_score
+
+def new_game():
+    for widget in ROOT.winfo_children():
+        widget.destroy()
+    init_game_state()
+    ui()
+
+def init_game_state():
+
+    global last_piece_selected
+    global last_piece_played
+    global game_board_state
+    global p_score
+    global p_count
+    global current_player
+
+    last_piece_selected = {
+        "key": '',
+        "color": 'gray',
+        "player": '',
+        "piece": '',
+        "placed": False
+    }
+
+    # Track last piece played
+    last_piece_played = {
+        "key": '',
+        "player": '',
+        "space": [],
+    }
+
+    # Track game board state
+    game_board_state = [
+        ["0x0", "1x0", "2x0", "3x0"],
+        ["0x1", "1x1", "2x1", "3x1"],
+        ["0x2", "1x2", "2x2", "2x3"],
+        ["0x3", "1x3", "2x3", "3x3"],
+    ]
+
+    # Track player score
+    p_score = {
+        P1_NAME: 0,
+        P2_NAME: 0,
+    }
+
+    p_count = {
+        P1_NAME: 8,
+        P2_NAME: 8
+    }
+
+    current_player = P1_NAME
 
 
 def ui():
@@ -391,10 +460,23 @@ def ui():
     ROOT.title("Pylieff")
     ROOT.geometry(f"{window_x}x{window_y}")
 
+    menubar = Menu(ROOT)
+    ROOT.config(menu = menubar)
+
+    game_menu = Menu(menubar, tearoff = 0)
+    config_menu = Menu(menubar, tearoff = 0)
+    menubar.add_cascade(label="Game", menu=game_menu)
+    menubar.add_cascade(label="Config", menu=config_menu)
+
+    game_menu.add_command(label = "New Game", command = new_game)
+
+    message_label = Label(ROOT, text='')
+    message_label.place(x = start, y = 400)
+
     # Create player pieces
 
-    p1_label = player_board(P1_NAME, P_WIDTH * .4, 100, start, P1_COLOR)
-    p2_label = player_board(P2_NAME, (start * 3) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)), 100, start, P2_COLOR)
+    p1_label = player_board(P1_NAME, P_WIDTH * .4, 100, start, P1_COLOR, message_label)
+    p2_label = player_board(P2_NAME, (start * 3) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)), 100, start, P2_COLOR, message_label)
 
     current_label = Label(ROOT, text = f"Current Player: {current_player}")
     current_label.place(x = start + INTERVAL, y = start)
@@ -431,7 +513,7 @@ def ui():
         space.place(x = start_x + board_x, y = start_y + board_y, width = P_WIDTH, height = P_WIDTH)
         space.bind("<Enter>", on_enter)
         space.bind("<Leave>", partial(on_leave, "Game Board"))
-        space.bind("<Button-1>", partial(on_click_board, current_label, p1_label, p2_label))
+        space.bind("<Button-1>", partial(on_click_board, message_label, current_label, p1_label, p2_label))
         board_x += INTERVAL
         if board_x > 3 * INTERVAL:
             board_y += INTERVAL
