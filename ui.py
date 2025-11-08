@@ -428,13 +428,15 @@ def change_settings():
     size_option = IntVar(config, 50)
 
     Label(config, text = "Size:").place(x = 10, y = 70)
-    Radiobutton(config, text = "Small", variable=size_option, value=50).place(x = 50, y = 70)
-    Radiobutton(config, text = "Medium", variable=size_option, value=100).place(x = 50, y = 90)
-    Radiobutton(config, text = "Large", variable=size_option, value=150).place(x = 50, y = 110)
+    Radiobutton(config, text = "Small", variable=size_option, value=50).place(x = 75, y = 70)
+    Radiobutton(config, text = "Medium", variable=size_option, value=100).place(x = 75, y = 90)
+    Radiobutton(config, text = "Large", variable=size_option, value=150).place(x = 75, y = 110)
 
-    Button(config, text = "Save", command = lambda: save_settings(p1_entry.get(), p2_entry.get(), size_option.get(), config)).place(x = 10, y = 150)
+    Button(config, text = "Save", command = lambda: save_settings(p1_entry.get(), p2_entry.get(), size_option.get(), config)).place(x = 10, y = 165)
 
-    Button(config, text = "Cancel", command = config.destroy).place(x = 75, y = 150)
+    Button(config, text= "Reset", command = lambda: save_settings("Player 1", "Player 2", 50, config)).place(x = 10, y = 130)
+
+    Button(config, text = "Cancel", command = config.destroy).place(x = 75, y = 165)
 
 
     
@@ -449,6 +451,18 @@ def save_settings(p1, p2, size, config):
 
     P_WIDTH = size
     INTERVAL = P_WIDTH + 3
+
+    cf = open("config.py", "w")
+    cf.write('from tkinter import Tk\n\n')
+    cf.write('P1_COLOR = "gray"\n')
+    cf.write(f'P1_NAME = "{P1_NAME}"\n')
+    cf.write('P2_COLOR = "red"\n')
+    cf.write(f'P2_NAME = "{P2_NAME}"\n')
+    cf.write('B_COLOR = "gray"\n\n')
+    cf.write(f'P_WIDTH = {P_WIDTH}\n')
+    cf.write(f'INTERVAL = {P_WIDTH} + 3\n\n')
+    cf.write('ROOT = Tk()')
+    cf.close()
     
     config.destroy()
 

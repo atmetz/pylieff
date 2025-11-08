@@ -7,6 +7,6 @@ P2_NAME = "Player 2"
 B_COLOR = "gray"
 
 P_WIDTH = 50
-INTERVAL = P_WIDTH + 3
+INTERVAL = 50 + 3
 
 ROOT = Tk()
