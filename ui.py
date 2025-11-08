@@ -188,7 +188,6 @@ def check_score():
     # check for line with piece as middle of line diagonal
     if sp_x == 1 or sp_x == 2:
         if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
-            print("Scored: 11")
             p_score[last_piece_played["player"]] += 1
 
 def check_connected(space1, space2, space3):
@@ -252,7 +251,6 @@ def check_valid_any():
                     return True
 
     return False
-
 
 def show_piece(key, canvas):
     if "xcross" in key:
@@ -407,9 +405,12 @@ def init_game_state():
     current_player = P1_NAME
 
 def change_settings():
-    config = Toplevel()
+
+    x = ROOT.winfo_x()
+    y = ROOT.winfo_y()
+    config = Toplevel(ROOT)
     config.title("Settings")
-    config.geometry("200x200")
+    config.geometry(f"200x200+{x}+{y}")
 
     p1_label = Label(config, text = "Player 1:")    
     p2_label = Label(config, text = "Player 2:")
@@ -441,11 +442,13 @@ def save_settings(p1, p2, size, config):
     global P1_NAME
     global P2_NAME
     global P_WIDTH
+    global INTERVAL
 
     P1_NAME = p1
     P2_NAME = p2
 
     P_WIDTH = size
+    INTERVAL = P_WIDTH + 3
     
     config.destroy()
 
@@ -459,8 +462,33 @@ def ui():
     start = 20
     end = start + 2 + (INTERVAL * 4)
 
-    window_x = (start * 4) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)) * 2   
-    window_y = 9 * P_WIDTH
+    if P_WIDTH == 50:
+        p1_x = 20
+        p2_x = 458
+        gb_x = 186
+        st_y = 100
+        m_y = 400
+        w_x = 624
+        w_y = 450
+    elif P_WIDTH == 100:
+        p1_x = 40
+        p2_x = 778
+        gb_x = 306
+        st_y = 150
+        m_y = 650  
+        w_x = 1074
+        w_y = 775 
+    elif P_WIDTH == 150:
+        p1_x = 60
+        p2_x = 1098
+        gb_x = 426
+        st_y = 200
+        m_y = 900
+        w_x = 1524
+        w_y = 1153
+
+    window_x = w_x   
+    window_y = w_y
 
     ROOT.title("Pylieff")
     ROOT.geometry(f"{window_x}x{window_y}")
@@ -475,19 +503,19 @@ def ui():
     game_menu.add_command(label = "Settings", command = change_settings)
 
     message_label = Label(ROOT, text='')
-    message_label.place(x = start, y = 400)
+    message_label.place(x = start, y = m_y)
 
     # Create player pieces
 
-    p1_label = player_board(P1_NAME, P_WIDTH * .4, 100, start, P1_COLOR, message_label)
-    p2_label = player_board(P2_NAME, (start * 3) + ((P_WIDTH * 5) + 2) + ((INTERVAL * 2) + (start * 2)), 100, start, P2_COLOR, message_label)
+    p1_label = player_board(P1_NAME, p1_x, st_y, start, P1_COLOR, message_label)
+    p2_label = player_board(P2_NAME, p2_x, st_y, start, P2_COLOR, message_label)
 
     current_label = Label(ROOT, text = f"Current Player: {current_player}")
     current_label.place(x = start + INTERVAL, y = start)
 
     # Create Game Board
     game_board = Canvas(ROOT, width = (start * 2) + (INTERVAL * 4), height = (start * 2) + (INTERVAL * 4), bg="gray")
-    game_board.place(x = ((start * 4) + (INTERVAL * 2)), y = 100)
+    game_board.place(x = gb_x, y = st_y)
     
     game_board.create_rectangle(start, start, start + (INTERVAL * 4), start + (INTERVAL * 4), width = 3)
     
@@ -508,8 +536,8 @@ def ui():
         for c in range(4):
             spaces.append(Canvas(ROOT, width = P_WIDTH, height = P_WIDTH, bg=B_COLOR, name = f"{str(r)},{str(c)}"))
 
-    start_x = ((start * 4) + (INTERVAL * 2)) + start + 2
-    start_y = 102 + start
+    start_x = gb_x + 22
+    start_y = st_y + 22
     board_x = 0
     board_y = 0
 
