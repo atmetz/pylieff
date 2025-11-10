@@ -2,10 +2,12 @@ from ui import ui
 from config import P1_COLOR, P1_NAME, P2_COLOR, P2_NAME
 
 class Player:
-    def __init__(self, name, color, score=0):
+    def __init__(self, name, color, piece_count = 8, score = 3, current = False):
         self.name = name
         self.color = color
+        self.piece_count = piece_count
         self.score = score
+        self.current = current
 
 def main():
     print("Running Pylieff!")
