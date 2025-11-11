@@ -128,8 +128,6 @@ class PlayerBoard(Board):
 
         global last_piece_selected
 
-        print(player.current)
-
         win_width = ROOT.winfo_width()
         
         if player.current:
@@ -163,6 +161,12 @@ class PlayerBoard(Board):
 class GameBoard(Board):
         
     def __init__(self, b_x, b_y, start, message_label):
+        self.game_board_state = [
+            ["0x0", "1x0", "2x0", "3x0"],
+            ["0x1", "1x1", "2x1", "3x1"],
+            ["0x2", "1x2", "2x2", "2x3"],
+            ["0x3", "1x3", "2x3", "3x3"],
+        ]
         super().__init__(None, b_x, b_y, start, message_label)
 
     
@@ -239,11 +243,11 @@ class GameBoard(Board):
                     last_piece_selected["piece"] = ''
                     
                     if player1.current:
-                        record_piece(player1)
-                        check_score(player1)
+                        self.record_piece(player1)
+                        check_score(player1, self.game_board_state)
                     else:
-                        record_piece(player2)
-                        check_score(player2)
+                        self.record_piece(player2)
+                        check_score(player2, self.game_board_state)
 
                     if player1.current and check_valid_any():
                         player1.current = False
@@ -279,6 +283,14 @@ class GameBoard(Board):
 
         else:
             message_label.config(text = f"Please select a piece to play.")
+    
+
+    def record_piece(self, player): 
+
+        coords = last_piece_played["space"].split(',')
+
+        self.game_board_state[int(coords[0])][int(coords[1])] = last_piece_selected["player"]
+        player.piece_count -= 1
 
 def on_enter(event):
 
@@ -302,65 +314,66 @@ def on_leave(board, event):
     else:
         event.widget.config(bg=B_COLOR)
 
-def record_piece(player): 
+'''def record_piece(player): 
    
     global game_board_state
 
     coords = last_piece_played["space"].split(',')
 
     game_board_state[int(coords[0])][int(coords[1])] = last_piece_selected["player"]
-    player.piece_count -= 1
+    player.piece_count -= 1'''
 
-def check_score(player):
+def check_score(player, game_board_state):
 
     sp_x, sp_y = [int(s) for s in (last_piece_played["space"].split(','))]    
 
     # check for line with piece as start/end of line horizontal
     if sp_y <= 1:
-        if check_connected([sp_x, sp_y], [sp_x, sp_y + 1], [sp_x, sp_y + 2]):
+        if check_connected([sp_x, sp_y], [sp_x, sp_y + 1], [sp_x, sp_y + 2], game_board_state):
             player.score += 1
     if sp_y >= 2:
-        if check_connected([sp_x, sp_y], [sp_x, sp_y - 1], [sp_x, sp_y - 2]):
+        if check_connected([sp_x, sp_y], [sp_x, sp_y - 1], [sp_x, sp_y - 2], game_board_state):
             player.score += 1
 
     # check for line with piece as middle of line horizontal
     if sp_y == 1 or sp_y == 2:
-        if check_connected([sp_x, sp_y - 1], [sp_x, sp_y], [sp_x, sp_y + 1]):
+        if check_connected([sp_x, sp_y - 1], [sp_x, sp_y], [sp_x, sp_y + 1], game_board_state):
             player.score += 1
 
     # check for line with piece as start/end of line vertical
     if sp_x <= 1:
-        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y], [sp_x + 2, sp_y]):
+        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y], [sp_x + 2, sp_y], game_board_state):
             player.score += 1
     if sp_x >= 2:
-        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y], [sp_x - 2, sp_y]):
+        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y], [sp_x - 2, sp_y], game_board_state):
             player.score += 1
 
     # check for line with piece as middle of line vertical
     if sp_x == 1 or sp_x == 2:
-        if check_connected([sp_x - 1, sp_y], [sp_x, sp_y], [sp_x + 1, sp_y]):
+        if check_connected([sp_x - 1, sp_y], [sp_x, sp_y], [sp_x + 1, sp_y], game_board_state):
             player.score += 1
 
     # check for line with piece as start/end of line diagonal
     if sp_x <= 1 and sp_y <= 1:
-        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y + 1], [sp_x + 2, sp_y + 2]):
+        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y + 1], [sp_x + 2, sp_y + 2], game_board_state):
             player.score += 1    
     if sp_x <= 1 and sp_y >= 2:
-        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y - 1], [sp_x + 2, sp_y - 2]):
+        if check_connected([sp_x, sp_y], [sp_x + 1, sp_y - 1], [sp_x + 2, sp_y - 2], game_board_state):
             player.score += 1    
     if sp_x >= 2 and sp_y >= 2:
-        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y - 1], [sp_x - 2, sp_y - 2]):
+        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y - 1], [sp_x - 2, sp_y - 2], game_board_state):
             player.score += 1    
     if sp_x >= 2 and sp_y <= 1:
-        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y + 1], [sp_x - 2, sp_y + 2]):
+        if check_connected([sp_x, sp_y], [sp_x - 1, sp_y + 1], [sp_x - 2, sp_y + 2], game_board_state):
             player.score += 1
 
     # check for line with piece as middle of line diagonal
     if sp_x == 1 or sp_x == 2:
-        if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
+        if ((check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1], game_board_state)) or 
+        (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1], game_board_state))):
             player.score += 1
 
-def check_connected(space1, space2, space3):
+def check_connected(space1, space2, space3, game_board_state):
     if ((space1[0] < 0 or space1[0] > 3) or (space1[1] < 0 or space1[1] > 3) or 
         (space2[0] < 0 or space2[0] > 3) or (space2[1] < 0 or space2[1] > 3) or
         (space3[0] < 0 or space3[0] > 3) or (space3[1] < 0 or space3[1] > 3)):
