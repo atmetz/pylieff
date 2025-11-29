@@ -187,7 +187,9 @@ def check_score():
 
     # check for line with piece as middle of line diagonal
     if sp_x == 1 or sp_x == 2:
-        if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])) or (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
+        if (check_connected([sp_x - 1, sp_y - 1], [sp_x, sp_y], [sp_x + 1, sp_y + 1])):
+            p_score[last_piece_played["player"]] += 1
+        if (check_connected([sp_x + 1, sp_y - 1], [sp_x, sp_y], [sp_x - 1, sp_y + 1])):
             p_score[last_piece_played["player"]] += 1
 
 def check_connected(space1, space2, space3):
